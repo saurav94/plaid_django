@@ -138,8 +138,9 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 LOGIN_REDIRECT_URL = 'plaid-home'
 LOGIN_URL = 'login'
 
+CELERY_BROKER_URL = 'amqp://localhost'
 
 PLAID_CLIENT_ID = os.environ.get('PLAID_CLIENT_ID')
 PLAID_SECRET = os.environ.get('PLAID_SECRET')
-NGROK_ID = "896547f1a3bc"
+NGROK_ID = "7a2220bc79b9"
 

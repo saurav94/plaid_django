@@ -10,7 +10,7 @@ from .models import Item, Transaction, Account
 from .serializers import TransactionSerializer, AccountSerializer
 from .pclient import Pclient
 from .utils import clean_accounts_data
-from .webhook_tasks import save_transactions_to_db, delete_transactions_from_db
+from .tasks import save_transactions_to_db, delete_transactions_from_db
 from plaid_django.settings import NGROK_ID
 
 client = Pclient.getInstance()
@@ -56,6 +56,8 @@ class AccessTokenCreate(APIView):
         item = Item.objects.create(user=self.request.user, item_id=item_id, access_token=access_token)
         item.save()
 
+        # save_transactions_to_db.delay(item_id, 50)
+
         data = {
             "access_token": access_token,
             "item_id": item_id
@@ -86,6 +88,30 @@ class TransactionsGet(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class TransactionsGetDB(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        item = Item.objects.filter(user=self.request.user)
+        item_id = item[0].pk
+
+        accounts =  Account.objects.filter(item_id=item[0])
+
+        account_id_list = []
+        for acc in accounts:
+            account_id_list.append(acc.pk)
+
+        print("account_id_list", account_id_list)
+
+        transactions = Transaction.objects.filter(account_id__in=account_id_list)
+        transactions = list(transactions.values())
+
+        # serializer = TransactionSerializer(data=transactions, many=True)
+        # serializer.is_valid(raise_exception=True)
+
+        return Response(transactions, status=status.HTTP_200_OK)
+
+
 class AccountBalance(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -105,6 +131,22 @@ class AccountBalance(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class AccountBalanceDB(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        item = Item.objects.filter(user=self.request.user)
+        item_id = item[0].pk
+
+        accounts =  Account.objects.filter(item_id=item[0])
+        accounts = list(accounts.values())
+        
+        # serializer = AccountSerializer(data=list(accounts.values()), many=True)
+        # serializer.is_valid(raise_exception=True)
+
+        return Response(accounts, status=status.HTTP_200_OK)
+
+
 class WebhookTransactions(APIView):
     def post(self, request):
         data = request.data
@@ -118,13 +160,14 @@ class WebhookTransactions(APIView):
             item_id = data['item_id']
             if webhook_code == "TRANSACTIONS_REMOVED":
                 removed_transactions = data['removed_transactions']
-                delete_transactions_from_db(item_id, removed_transactions)
+                delete_transactions_from_db.delay(item_id, removed_transactions)
             else:
                 new_transactions = data['new_transactions']
                 print("New transaction: ", new_transactions)
 
-                if new_transactions == 0: new_transactions=50
-                save_transactions_to_db(item_id, new_transactions)
+                if new_transactions == 0: new_transactions=20
+                save_transactions_to_db.delay(item_id, new_transactions)
+                # save_transactions_to_db(item_id, new_transactions)
         
         return HttpResponse("Webhook received", status=status.HTTP_202_ACCEPTED)
 
