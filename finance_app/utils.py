@@ -4,7 +4,7 @@ def clean_accounts_data(item_id, accounts):
 
     for acc in accounts:
         data = {}
-        data['item_id'] = item_id
+        data['item'] = item_id
         data['account_id'] = acc['account_id']
 
         if not 'balances' in acc:

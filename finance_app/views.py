@@ -93,9 +93,8 @@ class TransactionsGetDB(APIView):
 
     def get(self, request):
         item = Item.objects.filter(user=self.request.user)
-        item_id = item[0].pk
-
-        accounts =  Account.objects.filter(item_id=item[0])
+        
+        accounts =  Account.objects.filter(item=item[0].pk)
 
         account_id_list = []
         for acc in accounts:
@@ -103,7 +102,7 @@ class TransactionsGetDB(APIView):
 
         print("account_id_list", account_id_list)
 
-        transactions = Transaction.objects.filter(account_id__in=account_id_list)
+        transactions = Transaction.objects.filter(account__in=account_id_list)
         transactions = list(transactions.values())
 
         # serializer = TransactionSerializer(data=transactions, many=True)
@@ -136,9 +135,8 @@ class AccountBalanceDB(APIView):
 
     def get(self, request):
         item = Item.objects.filter(user=self.request.user)
-        item_id = item[0].pk
 
-        accounts =  Account.objects.filter(item_id=item[0])
+        accounts =  Account.objects.filter(item_id=item[0].pk)
         accounts = list(accounts.values())
         
         # serializer = AccountSerializer(data=list(accounts.values()), many=True)

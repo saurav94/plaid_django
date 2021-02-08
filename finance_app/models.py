@@ -12,7 +12,7 @@ class Item(models.Model):
 
 
 class Account(models.Model):
-    item_id = models.ForeignKey(Item, on_delete=models.CASCADE)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
     account_id = models.CharField(max_length=100)
     available_balance = models.FloatField()
     current_balace = models.FloatField()
@@ -25,7 +25,7 @@ class Account(models.Model):
 
 
 class Transaction(models.Model):
-    account_id = models.ForeignKey(Account, on_delete=models.CASCADE)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
     transaction_id = models.CharField(max_length=100)
     amount = models.FloatField()
     date = models.DateField()

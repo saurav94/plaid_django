@@ -29,14 +29,13 @@ def save_transactions_to_db(item_id, new_transactions):
     response = client.Transactions.get(access_token, start_date=start_dt, end_date=end_dt, count=new_transactions)
     
     accounts = clean_accounts_data(item[0].pk, response['accounts'])
-    # print("accounts", accounts)
-    accnts = Account.objects.filter(item_id=item)
+    
+    accnts = Account.objects.filter(item=item[0])
 
     # Update records in accounts table
     for acc in accnts:
         account_value = next((elem for elem in accounts if elem["account_id"] == acc.account_id), None)
         
-        # print("account_value", account_value)
         if account_value:
             accnts.filter(account_id=acc.account_id).update(
                 available_balance=account_value['available_balance'],
@@ -52,8 +51,6 @@ def save_transactions_to_db(item_id, new_transactions):
         
         if not accnts.filter(account_id=acc['account_id']).exists():
             save_accounts.append(acc)
-    
-    # print("save_accounts", save_accounts)
 
     acc_serializer = AccountSerializer(data=save_accounts, many=True)
     acc_serializer.is_valid(raise_exception=True)
@@ -61,7 +58,7 @@ def save_transactions_to_db(item_id, new_transactions):
 
     
     transactions = response['transactions']
-    # print("transactions", transactions)
+    
     trans_id = [trans['transaction_id'] for trans in transactions]
 
     trans = Transaction.objects.filter(transaction_id__in=trans_id)
@@ -69,7 +66,7 @@ def save_transactions_to_db(item_id, new_transactions):
     # Update records in transactions table
     for tran in trans:
         trans_value = next((elem for elem in transactions if elem["transaction_id"] == tran.transaction_id), None)
-        # print("trans_value", trans_value)
+        
         if trans_value:
             trans.filter(transaction_id=tran.transaction_id).update(
                 amount=trans_value['amount'],
@@ -83,16 +80,16 @@ def save_transactions_to_db(item_id, new_transactions):
     for tran in transactions:
 
         if not trans.filter(transaction_id=tran['transaction_id']).exists():
-            tran['account_id'] = Account.objects.filter(account_id=tran['account_id'])[0].pk
-            # print("tran",tran)
+            tran['account'] = Account.objects.filter(account_id=tran['account_id'])[0].pk
+            del tran['account_id']
+            
             save_transactions.append(tran)
-
-    # print("save_transactions", save_transactions)
 
     tr_serializer = TransactionSerializer(data=save_transactions, many=True)
     tr_serializer.is_valid(raise_exception=True)
     tr_serializer.save()
 
-    print("DB entries updated")
+    result = f"DB entries updated, {len(save_accounts)} created. {len(save_transactions)} created"
+    print(result)
 
-    return "DB entries saved and updated"
+    return result
