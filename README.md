@@ -1,5 +1,5 @@
 # plaid_django
-Finance app on Django rest framework using plaid apis
+Finance app on Django rest framework using plaid APIs
 
 ## Django rest Apis for signup, login and logout
 
@@ -9,6 +9,7 @@ Finance app on Django rest framework using plaid apis
 
 `api/logout/` - Logout using knox token
 
+
 ## Fetch and store data from Plaid Apis
 
 `get_public_token/` - Get public token from Plaid
@@ -17,11 +18,11 @@ Finance app on Django rest framework using plaid apis
 
 `get_transactions/` - Get transactions from plaid api
 
-`get_transactions_from_db/` - Get transactions saved in db
+`get_transactions_from_db/` - Fetch transactions saved in db
 
 `get_account_balance/` - Get account details from plaid api
 
-`get_account_balance_from_db/` - Get account details saved in db
+`get_account_balance_from_db/` - Fetch account details saved in db
 
 
 ## Webhooks
@@ -31,7 +32,12 @@ Finance app on Django rest framework using plaid apis
 `webhook_transactions/` - Transactions Webhook 
 
 
+## Description
 
-- Async tasks handled by celery usig RabbitMQ broker
-- Localhost exposed using ngrox
+Databse is SQLite
 
+Start the rabbitmq server - `rabbitmq-server`
+
+Async tasks handled by celery - `celery -A plaid_django worker -l info`
+
+Localhost exposed using ngrox for webhooks - `./ngrox http 8000`
